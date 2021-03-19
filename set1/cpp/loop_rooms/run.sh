@@ -1,0 +1,1 @@
+g++ -std=c++11 -Wall -Werror -O3 -o loop_rooms loop_rooms.cpp && ./loop_rooms maze1.txt
