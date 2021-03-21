@@ -3,10 +3,12 @@
 #include <fstream>
 #include <string>
 using namespace std;
+#define debug(x) cout << #x << " = " << x << endl
+#define debug2(x) cout << x << " "
 
 void printVector(vector<int> path){
 	for (auto i : path)
-		cout << i << " ";
+		debug2(i);
 	cout << endl;
 }
 
@@ -41,7 +43,8 @@ int main(int argc, char** argv) {
 	int hospitals;
 	file >> current;
 	hospitals = stoi(current);
-	cout << days << " " << hospitals << endl;
+	debug(days);
+	debug(hospitals);
 	vector<int> temp, tempMax, longest;
 	size_t max = 0;
 	size_t count = 0;
@@ -57,5 +60,6 @@ int main(int argc, char** argv) {
 		}
 	}
 	printVector(longest);
+	system("pause");
 	return 0;
 }
