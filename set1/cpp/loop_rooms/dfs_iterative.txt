@@ -1,0 +1,20 @@
+void dfsIterative (int src) {
+            stack<int> stk;
+            visited[src] = true;
+            stk.push(src);
+            while (!stk.empty()) {
+                src = stk.top();
+                stk.pop();
+                for (auto &adj_node : adjlist[src]) {
+                    if (adj_node == OUT_OF_BOUNDS) continue; // perimeter
+                    if (existsInWinnable(adj_node)) {
+                        winnable.insert(src);
+                        continue;
+                    }
+                    if (!visited[adj_node]) {
+                        visited[adj_node] = true;
+                        stk.push(adj_node);
+                    }
+                }
+            }
+        }
