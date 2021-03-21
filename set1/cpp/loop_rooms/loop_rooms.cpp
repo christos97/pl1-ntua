@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <list>
+#include <chrono>
 using namespace std;
 #define debug(x) cout << #x << " = " << x << endl
 typedef set<int> si; 
@@ -37,6 +38,8 @@ class Graph {
 
 int main(int argc, char **argv) {
     ios_base::sync_with_stdio(0), cin.tie(0), cout.tie(0);
+    auto start = chrono::steady_clock::now();
+
     ifstream file;
     string gridSize;
     file.open(argv[1]);
@@ -46,10 +49,42 @@ int main(int argc, char **argv) {
     graph.from(file);
     file.close();
     int doomed = graph.countDoomed();
-    cout << doomed << endl;
+    debug(doomed);
+    auto end = chrono::steady_clock::now();
+    auto diff = end - start;
+    cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
+    for (auto winab: winnable) debug(winab);
 }
 
+inline bool existsInSet(si& _set, int& _v) {
+    return _set.find(_v) != _set.end();
+}
 
+/* Private */
+void Graph::addEdge (int _src, int _dst) {
+    adjlist[_src].push_back(_dst);
+}
+
+void Graph::dfs (int _src) {
+    visited[_src] = true;
+    for (auto& adj_node : adjlist[_src]) {
+        if (adj_node == OUT_OF_BOUNDS) continue; /* Perimeter is checked at file reading */
+        if (existsInSet(winnable, adj_node)) { /* My neighboor can win, so i can win too */
+            for (size_t i = 0; i <= visited.size(); i++) {
+                if (visited[i]) winnable.insert(i); 
+            } 
+            continue; 
+        }
+        if (!visited[adj_node]) 
+            dfs(adj_node);
+    }
+} 
+
+void Graph::next () {
+    fill(visited.begin(), visited.end(), false);
+}
+
+/* Public */
 void Graph::from(ifstream& _file) {
     int row = -1, v = 0;
     string out;
@@ -84,32 +119,10 @@ void Graph::from(ifstream& _file) {
     }
 }
 
-void Graph::addEdge (int _src, int _dst) {
-    adjlist[_src].push_back(_dst);
-}
-
-void Graph::dfs (int _src) {
-    visited[_src] = true;
-    for (auto& adj_node : adjlist[_src]) {
-        if (adj_node == OUT_OF_BOUNDS) continue; /* Perimeter is checked at file reading */
-        if (existsInSet(winnable, adj_node)) { 
-            winnable.insert(_src); 
-            continue; 
-        }
-        if (!visited[adj_node]) 
-            dfs(adj_node);
-    }
-} 
-
-void Graph::next () {
-    fill(visited.begin(), visited.end(), false);
-}
-
 int Graph::countDoomed() {
     for (int i=0; i < n*m; i++){ dfs(i); next(); }
+    int winab_count = winnable.size();
+    debug(n*m);
+    debug(winab_count);
     return n*m - winnable.size();
-}
-
-inline bool existsInSet(si& _set, int& _v) {
-    return _set.find(_v) != _set.end();
 }
