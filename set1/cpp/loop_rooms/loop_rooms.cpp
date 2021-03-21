@@ -47,8 +47,11 @@ class Graph {
             visited[src] = true;
             for (auto& adj_node : adjlist[src]) {
                 if (adj_node == OUT_OF_BOUNDS) continue;
-                if (existsInWinnable(adj_node)) {
+                if (existsInWinnable(adj_node)) { /* If neighboor is winnable, src is winnable too */
                     winnable.insert(src);
+                    debug(src);
+                    debug(adj_node);
+                    cout << endl;
                     continue;
                 }
                 if (!visited[adj_node]) {
@@ -69,6 +72,7 @@ class Graph {
                     if (adj_node == OUT_OF_BOUNDS) continue; // perimeter
                     if (existsInWinnable(adj_node)) {
                         winnable.insert(src);
+                        debug(adj_node);
                         continue;
                     }
                     if (!visited[adj_node]) {
@@ -93,7 +97,7 @@ int main(int argc, char **argv) {
     int vertex = 0, row = -1;
     while (file >> out) {
         row++;
-        for (int col=0; col < m ; col++){
+        for (int col = 0; col < m ; col++){
             int direction = out[col] - '9';
             bool perimeter = row == 0 || row == n-1 || col == 0 || col == m-1;
             if (perimeter) { /* Room with OUT_OF_BOUNDS edge is winnable */
@@ -146,6 +150,7 @@ int main(int argc, char **argv) {
             }
         }
     } 
+    file.close();
     
     for (int i=0; i < n*m; i++){
         graph.dfs(i);
