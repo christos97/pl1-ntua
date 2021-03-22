@@ -11,7 +11,7 @@ using namespace std;
 typedef set<int> si; 
 typedef list<int> li;
 
-enum Direction { UP = 28, DOWN = 11, RIGHT = 25, LEFT = 19, OUT_OF_BOUNDS = 9999 }; /* Acceptable moves */
+enum Direction { UP = 28, DOWN = 11, RIGHT = 25, LEFT = 19, OUT_OF_BOUNDS = 9999, DUMMY_PARENT = -1 }; /* Acceptable moves */
 int n; /* Grid rows */ 
 int m; /* Grid cols */
 bool existsInSet(si& _set, int& _v);
@@ -19,26 +19,22 @@ bool existsInSet(si& _set, int& _v);
 class Graph {
     private:
         int nodes; /* Number pf nodes */
-        li *adjlist; /* Graphs adjacency list */
-        vector<bool> visited;
+        li *adjlist; /* Graph's adjacency list */
+        vector<bool> visited; /* For the 'traditional' part of the dfs */
+        si winnable; /* Once you reach you can win */
+        si doomed; /* Once you reach you can't win */
+        si visited_set; /* Temp memory for only current round visited nodes, for faster append to winnable or doomed sets in dfs */
         void addEdge(int _src, int _dst);
         void dfs(int& _src, int& _par);
         void next();
 
     public:
-        si winnable; /* Once you reach you can win */
-        si doomed; /* Once you reach you can't win */
         Graph() { }
-        Graph (int _nodes) { 
-            adjlist = new li[_nodes]; 
-            visited.resize(_nodes, false);
-            this->nodes = _nodes;
-        }
+        Graph (int _nodes);
         ~Graph () { delete [] adjlist; }
         void from(ifstream& _file);
-        int countDoomed();
+        int solve();
         void printRooms();
-
 };
 
 int main(int argc, char **argv) {
@@ -53,7 +49,7 @@ int main(int argc, char **argv) {
     Graph graph(n*m);
     graph.from(file);
     file.close();
-    int res = graph.countDoomed();
+    int res = graph.solve();
     cout << res << endl;
 
     graph.printRooms();
@@ -72,7 +68,7 @@ inline bool existsInSet(si& _set, int& _v) {
     return _set.find(_v) != _set.end();
 }
 
-/* Private Methods */
+/******************* Private Methods *******************/
 
 /** 
  *  Create a directed edge between two nodes 
@@ -84,9 +80,6 @@ void Graph::addEdge(int _src, int _dst) {
     adjlist[_src].push_back(_dst);
 }
 
-/* Temp memory to append faster this round's visited nodes, rather than looping through n*m visited vector */
-si visited_set; 
-
 /** 
  * Recursive dfs that also searches for values in winnable and/or doomed sets before continuing.
  *  @param _src: source node to dfs 
@@ -96,11 +89,11 @@ si visited_set;
 void Graph::dfs(int& _src, int& _par) {
     visited[_src] = true; visited_set.insert(_src);
     for (int& adj_node : adjlist[_src]) {
-        if (adj_node == OUT_OF_BOUNDS) continue; /* Perimeter checked at file reading, skip */
+        if (adj_node == OUT_OF_BOUNDS || adj_node == DUMMY_PARENT) continue; /* Skip these */
         if (adj_node == _par) { append(visited_set, doomed); continue; } /* I looped, we are all doomed */
         if (existsInSet(winnable, adj_node)) { append(visited_set, winnable); break; } /* I reached a winnable room, we can all win */
         if (existsInSet(doomed, adj_node)) { append(visited_set, doomed); break; } /* I reached a doomed room, we are all doomed */
-        if (!visited[adj_node]) dfs(adj_node, _src); /* we still need the vector for 0(1) here, existsInSet would be overkill */
+        if (!visited[adj_node]) dfs(adj_node, _src); /* we still need the vector for 0(1) here, existsInSet(visited, adj_node) would be overkill */
     }
 } 
 
@@ -110,11 +103,22 @@ void Graph::next() {
     visited_set.clear();
 }
 
-/* Public Methods */
+/******************* Public Methods *******************/
+
+/**
+ * Class constructor, initalize private variables based on number of nodes given
+ *  @param _nodes Number of nodes in the graph 
+*/
+Graph::Graph(int _nodes) {
+    adjlist = new li[_nodes]; 
+    visited.resize(_nodes, false);
+    this->nodes = _nodes;
+}
 
 /** 
-    * @param _file: File to create graph from
-    * @returns void or exits program if file invalid 
+ *  Read file and create adjacency list 
+ *  @param _file: File to create graph from
+ *  @returns void or exits program if file invalid 
 */
 void Graph::from(ifstream& _file) {
     int row = 0, v = 0;
@@ -154,13 +158,9 @@ void Graph::from(ifstream& _file) {
  *  Call after graph is created from file
  *  @returns Number of doomed rooms in grid  
 */
-int Graph::countDoomed() {
-    int par = -1;
-    for (int i=0; i < n*m; i++){ 
-        dfs(i, par); 
-        debug(par);
-        next(); 
-    }
+int Graph::solve() {
+    int par = -1; /* DUMMY_PARENT */
+    for (int i=0; i < n*m; i++){ dfs(i, par); next(); }
     return n*m - winnable.size();
 }
 
