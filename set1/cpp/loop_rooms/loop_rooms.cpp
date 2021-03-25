@@ -7,11 +7,13 @@
 #include <chrono>
 using namespace std;
 #define debug(x) cout << #x << " = " << x << endl
+#define now() chrono::steady_clock::now()
+#define execTime(dt) cout << chrono::duration <double, milli> (dt).count() << " ms" << endl
 #define append(src, dst) dst.insert(src.begin(), src.end())
 typedef set<int> si; 
 typedef list<int> li;
 
-enum Direction { UP = 28, DOWN = 11, RIGHT = 25, LEFT = 19, OUT_OF_BOUNDS = 9999, DUMMY_PARENT = -1 }; /* Acceptable moves */
+enum Direction { UP = 28, DOWN = 11, RIGHT = 25, LEFT = 19, OUT_OF_BOUNDS = 9999, DUMMY_PARENT = -9999 }; /* Acceptable moves */
 int n; /* Grid rows */ 
 int m; /* Grid cols */
 bool existsInSet(si& _set, int& _v);
@@ -23,7 +25,7 @@ class Graph {
         vector<bool> visited; /* For the 'traditional' part of the dfs */
         si winnable; /* Once you reach you can win */
         si doomed; /* Once you reach you can't win */
-        si visited_set; /* Temp memory for only current round visited nodes, for faster append to winnable or doomed sets in dfs */
+        si visited_set; /* Temp memory for only current round's visited nodes for faster append to winnable or doomed set respectively in dfs */
         void addEdge(int _src, int _dst);
         void dfs(int& _src, int& _par);
         void next();
@@ -34,12 +36,12 @@ class Graph {
         ~Graph () { delete [] adjlist; }
         void from(ifstream& _file);
         int solve();
-        void printRooms();
+        void printSets();
 };
 
 int main(int argc, char **argv) {
     ios_base::sync_with_stdio(0), cin.tie(0), cout.tie(0);
-    auto start = chrono::steady_clock::now();
+    //auto start = now();
     
     ifstream file;
     string gridSize;
@@ -52,14 +54,12 @@ int main(int argc, char **argv) {
     int res = graph.solve();
     cout << res << endl;
 
-    graph.printRooms();
-    auto end = chrono::steady_clock::now();
-    auto diff = end - start;
-    cout << chrono::duration <double, milli> (diff).count() << " ms" << endl;
+    //graph.printSets();
+    //execTime(now() - start);
 }
 
 /** 
- *  Search if a value exists in a set
+ *  Search if value exists in set
  *  @param _set: Set to search integer value
  *  @param _v: Value to search for
  *  @returns true if found, false otherwise
@@ -106,7 +106,7 @@ void Graph::next() {
 /******************* Public Methods *******************/
 
 /**
- * Class constructor, initalize private variables based on number of nodes given
+ *  Class constructor, initialize private variables based on number of nodes given
  *  @param _nodes Number of nodes in the graph 
 */
 Graph::Graph(int _nodes) {
@@ -159,13 +159,13 @@ void Graph::from(ifstream& _file) {
  *  @returns Number of doomed rooms in grid  
 */
 int Graph::solve() {
-    int par = -1; /* DUMMY_PARENT */
+    int par = DUMMY_PARENT; 
     for (int i=0; i < n*m; i++){ dfs(i, par); next(); }
     return n*m - winnable.size();
 }
 
-/* Print helper */
-void Graph::printRooms() {
+/*  Print helper  */
+void Graph::printSets() {
     for (auto winnab: winnable) debug(winnab);
     for (auto doomd: doomed) debug(doomd);
 }
