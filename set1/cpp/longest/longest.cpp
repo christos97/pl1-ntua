@@ -1,32 +1,30 @@
 #include <iostream>
 #include <vector> 
 #include <fstream>
-#include <string>
+#include <time.h>
 using namespace std;
-#define debug(x) cout << #x << " = " << x << endl
-#define debug2(x) cout << x << " "
+const clock_t begin_time = clock();
 
 void printVector(vector<int> path){
 	for (auto i : path)
-		debug2(i);
+		cout << i << " ";
 	cout << endl;
 }
 
-vector<int> checkAvg(int start, vector<int> table, int hospitals){
+int checkAvg(int start, vector<int> table, int hospitals, int max){
 	int sum = 0;
 	int curK = 0;
 	int curAvg = 0;
-	vector <int> curLong, longest;
+	int longest = 0;  
 	for (unsigned int i=start; i<table.size(); i++){
 		curAvg = -1 * (sum + table[i]) / ((curK + 1) * hospitals);
 		curK++;
 		sum += table[i];
-		curLong.push_back(table[i]);
 		if (curAvg >= 1)
-			longest = curLong;
+			longest = curK;
 	}
-	cout << "From: " << start << " Vector: ";
-	printVector(longest);
+	// cout << "From: " << start << " Vector: ";
+	// printVector(longest);
 	return longest;
 }
 
@@ -43,23 +41,33 @@ int main(int argc, char** argv) {
 	int hospitals;
 	file >> current;
 	hospitals = stoi(current);
-	debug(days);
-	debug(hospitals);
-	vector<int> temp, tempMax, longest;
-	size_t max = 0;
-	size_t count = 0;
-	while (file >> current){
-		temp.push_back(stoi(current));
-	}
+	cout << days << " " << hospitals << endl;
 	
-	while (count < temp.size()){
-		vector<int> curLong = checkAvg(count++, temp, hospitals);
-		if (curLong.size() > max){
-			max = curLong.size();
-			longest.swap(curLong);
+	vector<int> temp;
+	int max = 0;
+	for (int j=0; j<days; j++){
+		//curMax = checkAvg(count++, temp, hospitals, max);
+		int sum = 0;
+		int curK = 0;
+		int curAvg = 0;
+		int curMax = 0;
+		for (int i=j; i<days; i++){
+			if (j == 0){
+				file >> current ;
+				temp.push_back(stoi(current));
+			}
+			curAvg = -1 * (sum + temp[i]) / ((curK + 1) * hospitals);
+			curK++;
+			sum += temp[i];
+			if (curAvg >= 1)
+				curMax = curK;
 		}
+		if (curMax > max){
+			max = curMax;
+		}
+		if ((days-max <= j)) break;
 	}
-	printVector(longest);
-	system("pause");
+	cout << max << endl;
+	cout << float( clock () - begin_time ) /  CLOCKS_PER_SEC << endl;
 	return 0;
 }
