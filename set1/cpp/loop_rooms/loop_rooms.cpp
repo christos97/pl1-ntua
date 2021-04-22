@@ -13,7 +13,7 @@ ifstream file;
 string out;
 set<int> winnable; // Once you reach you can win (already registered as winnable room)
 set<int> blacklist; // Once you reach you can't win (already registered as not winnable room)
-enum Direction { UP = 28, DOWN = 11, RIGHT = 25, LEFT = 19, OUT_OF_BOUNDS = 9999 };
+enum Direction { UP = 28, DOWN = 11, RIGHT = 25, LEFT = 19, OUT_OF_BOUNDS = -9999 };
 int n, m;
 bool existsInWinnable(int& next);
 //bool isInBlacklist(int& current);
@@ -49,8 +49,8 @@ class Graph {
                 if (adj_node == OUT_OF_BOUNDS) continue;
                 if (existsInWinnable(adj_node)) { /* If neighboor is winnable, src is winnable too */
                     winnable.insert(src);
-                    debug(src);
-                    debug(adj_node);
+                    // debug(src);
+                    // debug(adj_node);
                     cout << endl;
                     continue;
                 }
@@ -72,7 +72,7 @@ class Graph {
                     if (adj_node == OUT_OF_BOUNDS) continue; // perimeter
                     if (existsInWinnable(adj_node)) {
                         winnable.insert(src);
-                        debug(adj_node);
+                        // debug(adj_node);
                         continue;
                     }
                     if (!visited[adj_node]) {
