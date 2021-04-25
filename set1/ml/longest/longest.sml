@@ -23,27 +23,27 @@ fun parse file =
                 end;
     
     in
-   		(days, readInts days [] hospitals 0.0)
+   		(days, Array.fromList (readInts days [] hospitals 0.0))
     end;
 
-fun max (a : real ,b :real) = if a > b then a else b;
-fun min (a,b) = if a < b then a else b;
+fun max (a : real, b : real) = if a > b then a else b;
+fun min (a : real, b : real) = if a < b then a else b;
 
-fun minmax (~1, arr : real list, lmin, rmax, len) = (lmin, rmax)
-|	minmax (i, arr, lmin, rmax, len) = minmax (i-1, arr, mim(List.nth(arr, i), hd lmin) :: lmin, max(List.nth(arr, len-i), hd rmax) :: rmax, len);
+fun minmax (~1, arr : real array, lmin : real list, rmax : real list, len) = (lmin, rmax)
+|	minmax (i, arr, lmin, rmax, len) = minmax (i-1, arr, min(Array.sub(arr, i), hd lmin) :: lmin, max(Array.sub(arr, len-i), hd rmax) :: rmax, len);
             
-fun loop (min : real list, max : real list, ~1, _, maxdiff) = maxdiff
+fun loop (min : real array, max : real array, ~1, _, maxdiff) = maxdiff
 |	loop (min, max, _, ~1, maxdiff) = maxdiff
 |	loop (min, max, i, j, maxdiff) =
-    if List.nth(min, i) < List.nth(max, j) then
+    if Array.sub(min, i) < Array.sub(max, j) then
         if maxdiff > i-j then loop (min, max, i, (j-1), maxdiff)
         else loop (min, max, i, (j-1), (i-j))
     else loop (min, max, (i-1), j, maxdiff);
         
-fun maxIndexDiff(arr : real list, n)=
+fun maxIndexDiff (arr : real array, n)=
     let
-        val (LMin, RMax) = minmax (n-2, arr, List.nth(arr, n-1) :: [], hd arr :: [], n-1)
-        val maxDiff = loop (LMin, (rev RMax), (n-1), (n-1), ~1)
+        val (LMin, RMax) = minmax (n-2, arr, Array.sub(arr, n-1) :: [], Array.sub(arr, 0) :: [], n-1)
+        val maxDiff = loop (Array.fromList LMin, Array.fromList (rev RMax), (n-1), (n-1), ~1)
     in
         if maxDiff = n-1 then maxDiff+1
         else maxDiff

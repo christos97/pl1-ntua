@@ -13,87 +13,19 @@ ifstream file;
 string out;
 set<int> winnable; // Once you reach you can win (already registered as winnable room)
 set<int> blacklist; // Once you reach you can't win (already registered as not winnable room)
-enum Direction { UP = 28, DOWN = 11, RIGHT = 25, LEFT = 19, OUT_OF_BOUNDS = -9999 };
+set<int> visited;
+enum Direction { UP = 28, DOWN = 11, RIGHT = 25, LEFT = 19, OUT_OF_BOUNDS = -1, BLACK_LIST = -404 };
 int n, m;
 bool existsInWinnable(int& next);
-//bool isInBlacklist(int& current);
-class Graph {
-    private:
-        int nodes;
-        list<int> *adjlist;
-        vector<bool> visited;
+bool existsInVisited(int& next);
 
-    public:
-        Graph() {
-        }
-
-        Graph (int nodes) { 
-            adjlist = new list<int> [nodes];
-            visited.resize(nodes, false);
-            this->nodes = nodes;
-        }
-
-        ~Graph () { 
-            delete [] adjlist;
-        }
-
-        void addEdge (int src, int dst) {
-            adjlist[src].push_back(dst);
-        }
-
-
-        // DFS recursive
-        void dfs (int src) {
-            visited[src] = true;
-            for (auto& adj_node : adjlist[src]) {
-                if (adj_node == OUT_OF_BOUNDS) continue;
-                if (existsInWinnable(adj_node)) { /* If neighboor is winnable, src is winnable too */
-                    winnable.insert(src);
-                    // debug(src);
-                    // debug(adj_node);
-                    cout << endl;
-                    continue;
-                }
-                if (!visited[adj_node]) {
-                    dfs(adj_node);
-                }
-            }
-        } 
-
-    // DFS iterative
-        void dfsIterative (int src) {
-            stack<int> stk;
-            visited[src] = true;
-            stk.push(src);
-            while (!stk.empty()) {
-                src = stk.top();
-                stk.pop();
-                for (auto &adj_node : adjlist[src]) {
-                    if (adj_node == OUT_OF_BOUNDS) continue; // perimeter
-                    if (existsInWinnable(adj_node)) {
-                        winnable.insert(src);
-                        // debug(adj_node);
-                        continue;
-                    }
-                    if (!visited[adj_node]) {
-                        visited[adj_node] = true;
-                        stk.push(adj_node);
-                    }
-                }
-            }
-        }
-
-        void next () {
-            fill(visited.begin(), visited.end(), false);
-        }
-};
 
 int main(int argc, char **argv) {
     ios_base::sync_with_stdio(0), cin.tie(0), cout.tie(0);
     file.open(argv[1]);
     file >> out; n = stoi(out);
     file >> out; m = stoi(out);
-    Graph graph(n*m);
+    int graph[n*m];
     int vertex = 0, row = -1;
     while (file >> out) {
         row++;
@@ -104,34 +36,34 @@ int main(int argc, char **argv) {
                 switch (direction){
                     case UP: {
                         if (row == 0) {
-                            graph.addEdge(vertex, OUT_OF_BOUNDS);
+                            graph[vertex] =  OUT_OF_BOUNDS;
                             winnable.insert(vertex);
                         }
-                        else graph.addEdge(vertex, vertex - m);
+                        else graph[vertex] =  vertex - m;
                         break;
                     }
                     case DOWN: {
                         if (row == n-1) {
-                            graph.addEdge(vertex, OUT_OF_BOUNDS);
+                            graph[vertex] =  OUT_OF_BOUNDS;
                             winnable.insert(vertex);
                         }
-                        else graph.addEdge(vertex, vertex + m);
+                        else graph[vertex] =  vertex + m;
                         break;
                     }
                     case LEFT: {
                         if (col == 0) {
-                            graph.addEdge(vertex, OUT_OF_BOUNDS);
+                            graph[vertex] =  OUT_OF_BOUNDS;
                             winnable.insert(vertex);
                         }
-                        else graph.addEdge(vertex, vertex - 1);
+                        else graph[vertex] =  vertex - 1;
                         break;
                     }
                     case RIGHT: {
                         if (col == m-1) {
-                            graph.addEdge(vertex, OUT_OF_BOUNDS);
+                            graph[vertex] =  OUT_OF_BOUNDS;
                             winnable.insert(vertex);
                         }
-                        else graph.addEdge(vertex, vertex + 1);
+                        else graph[vertex] =  vertex + 1;
                         break;
                     }
                     default: perror("invalid char"); exit(1);
@@ -140,10 +72,10 @@ int main(int argc, char **argv) {
             }
             else {
                 switch (direction){
-                    case UP: graph.addEdge(vertex, vertex - m); break;
-                    case DOWN: graph.addEdge(vertex, vertex + m); break;
-                    case LEFT: graph.addEdge(vertex, vertex - 1); break;
-                    case RIGHT: graph.addEdge(vertex, vertex + 1); break;
+                    case UP: graph[vertex] =  vertex - m; break;
+                    case DOWN: graph[vertex] =  vertex + m; break;
+                    case LEFT: graph[vertex] =  vertex - 1; break;
+                    case RIGHT: graph[vertex] =  vertex + 1; break;
                     default: perror("invalid char"); exit(1);
                 }
                 vertex++;
@@ -153,18 +85,42 @@ int main(int argc, char **argv) {
     file.close();
     
     for (int i=0; i < n*m; i++){
-        graph.dfs(i);
-        graph.next();
+        int j = i;
+        visited.clear();
+        while (true) {
+            visited.insert(j);
+            if (graph[j] == BLACK_LIST) {
+                for (auto room : visited){
+                    graph[room] = BLACK_LIST;
+                }
+                break;
+            } else if (graph[j] == OUT_OF_BOUNDS){
+                for (auto room : visited){
+                    graph[room] = OUT_OF_BOUNDS;
+                    if (!existsInWinnable(room)) winnable.insert(room);
+                }
+                break;
+            } else {
+                if (!existsInVisited(graph[j])){
+                    j = graph[j];
+                    continue;
+                } else {
+                    for (auto room : visited){
+                        graph[room] = BLACK_LIST;
+                    }
+                    break;
+                }
+            }
+        }
     }
-
     int doomed = n*m - winnable.size();
-    debug(doomed);
+    cout << doomed << endl;
 }
-
-/* bool isInBlacklist(int& current) {
-    return blacklist.find(current) != blacklist.end();
-} */
 
 inline bool existsInWinnable(int& next){
     return winnable.find(next) != winnable.end();
+}
+
+inline bool existsInVisited(int& next){
+    return visited.find(next) != visited.end();
 }
